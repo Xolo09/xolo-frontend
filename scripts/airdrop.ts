@@ -1,52 +1,79 @@
-import { Connection, Keypair, PublicKey } from '@solana/web3.js';
-import { getOrCreateAssociatedTokenAccount, transfer } from '@solana/spl-token';
-import * as fs from 'fs';
-import * as dotenv from 'dotenv';
+import 'dotenv/config';
+import {
+    getOrCreateAssociatedTokenAccount,
+    transfer,
+} from '@solana/spl-token';
+import {
+    Connection,
+    Keypair,
+    PublicKey,
+    clusterApiUrl,
+} from '@solana/web3.js';
+import fs from 'fs';
 
-dotenv.config();
+// ✅ Load env variables
+console.log("✅ ENV loaded");
+console.log("PAYER_KEYPAIR:", process.env.PAYER_KEYPAIR);
+console.log("TOKEN_MINT:", process.env.TOKEN_MINT);
 
-const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
+// ✅ Check env and file
+if (!process.env.PAYER_KEYPAIR || !fs.existsSync(process.env.PAYER_KEYPAIR)) {
+    throw new Error("❌ PAYER_KEYPAIR missing or not found");
+}
+if (!process.env.TOKEN_MINT) {
+    throw new Error("❌ TOKEN_MINT is missing");
+}
+
+const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 const payerKeypair = Keypair.fromSecretKey(
-    new Uint8Array(JSON.parse(fs.readFileSync(process.env.PAYER_KEYPAIR!, 'utf-8')))
+    Uint8Array.from(JSON.parse(fs.readFileSync(process.env.PAYER_KEYPAIR, "utf8")))
 );
+const mint = new PublicKey(process.env.TOKEN_MINT);
 
-const mint = new PublicKey(process.env.TOKEN_MINT!);
-
-// Replace this array with your real recipient addresses
-const recipients: string[] = [
-    '7uBqxUazvD1HQcR4JMQ3VZT6mXQ7i7ZQjQoAVq2WHN8v',
-    'GkEGKzQQ1Lgb9uQoQrCKbw4Lh9YTRtu58p3LTiq3FPr7',
-    '6HgejQNC5qNhymA5UzBiDd3oXZrwRoR4ZJZMLN2GmAsW'
+// ✅ Replace with your actual addresses
+const recipients = [
+    "BkRepDMEshCTW3s1GGQy8Js2nY3RYrDkXq9e3BareAkc",
+    "DRhqzEWvJDUt3vbi3XBSCk8GRfVYZNAQqDFf13N3QhMP",
+    "7ziQFR433cyfFpzzLMNxPzhe2iZW3EWcxjFr4PW43fzK",
 ];
 
-async function airdrop() {
-    for (const address of recipients) {
-        try {
-            const recipient = new PublicKey(address);
-            const payerTokenAccount = await getOrCreateAssociatedTokenAccount(connection, payerKeypair, mint, payerKeypair.publicKey);
-            const recipientTokenAccount = await getOrCreateAssociatedTokenAccount(
-                connection,
-                payerKeypair,       // payer
-                mint,
-                recipient,          // owner of the token account
-                true                // allowOwnerOffCurve (safe to include)
-            );
+async function airdrop(recipientAddress: string) {
+    try {
+        const recipient = new PublicKey(recipientAddress);
 
+        const fromTokenAccount = await getOrCreateAssociatedTokenAccount(
+            connection,
+            payerKeypair,
+            mint,
+            payerKeypair.publicKey
+        );
 
-            const signature = await transfer(
-                connection,
-                payerKeypair,
-                payerTokenAccount.address,
-                recipientTokenAccount.address,
-                payerKeypair,
-                1_000_000_000 // amount of tokens to send (adjust decimals as needed)
-            );
+        const toTokenAccount = await getOrCreateAssociatedTokenAccount(
+            connection,
+            payerKeypair,
+            mint,
+            recipient,
+            true
+        );
 
-            console.log(`✅ Sent tokens to ${address}. Signature: ${signature}`);
-        } catch (err) {
-            console.error(`❌ Failed to send to ${address}`, err);
-        }
+        const signature = await transfer(
+            connection,
+            payerKeypair,
+            fromTokenAccount.address,
+            toTokenAccount.address,
+            payerKeypair,
+            1_000_000_000 // 🔥 1 token (if 9 decimals)
+        );
+
+        console.log(`✅ Airdropped to ${recipientAddress}: ${signature}`);
+    } catch (err) {
+        console.error(`❌ Failed to send to ${recipientAddress}`, err);
     }
 }
 
-airdrop();
+(async () => {
+    for (const recipient of recipients) {
+        await airdrop(recipient);
+    }
+})();
+
