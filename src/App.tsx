@@ -1,6 +1,6 @@
 import React from 'react';
 import TransferWithTaxButton from './components/TransferWithTaxButton';
-import { BurnButton } from './components/BurnButton'; // this one IS a named export
+import { BurnButton } from './components/BurnButtonComponent'; // this one IS a named export
 
 export default function App() {
   return (
