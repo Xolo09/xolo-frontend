@@ -1,4 +1,6 @@
 import React from 'react';
+import { BurnButton } from './components/BurnButton';
+import { TransferWithTaxButton } from './components/TransferWithTaxButton';
 
 export default function App() {
   return (
@@ -6,12 +8,23 @@ export default function App() {
       padding: '2rem',
       backgroundColor: '#1a1a1a',
       color: 'white',
-      height: '100vh'
+      minHeight: '100vh',
+      fontFamily: 'sans-serif'
     }}>
-      <h1 style={{ color: 'red' }}>⚠️ React is working!</h1>
+      <h1 style={{ color: '#ff4d4f' }}>🔥 $XOLO Token Tools</h1>
+      <p>Connect your wallet to burn or transfer tokens with tax.</p>
+
+      <div style={{ marginTop: '2rem' }}>
+        <TransferWithTaxButton />
+      </div>
+
+      <div style={{ marginTop: '2rem' }}>
+        <BurnButton />
+      </div>
     </div>
   );
 }
+
 
 
 
