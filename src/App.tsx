@@ -1,6 +1,6 @@
 import React from 'react';
-import { BurnButton } from './components/BurnButton';
-import { TransferWithTaxButton } from './components/TransferWithTaxButton';
+import TransferWithTaxButton from './components/TransferWithTaxButton';
+import { BurnButton } from './components/BurnButton'; // this one IS a named export
 
 export default function App() {
   return (
@@ -24,6 +24,7 @@ export default function App() {
     </div>
   );
 }
+
 
 
 
